@@ -38,9 +38,9 @@ $ sudo docker ps -a
 CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS                    PORTS               NAMES
 86b133245e54        25897c36b312        "/usr/bin/gemstash..."   28 minutes ago      Up 28 minutes (healthy)                       gemstash
 ```
-will append the health-check response to the 'STATUS' column. To extract just the health you can use `inspect` and a parsing tool like [jq](https://stedolan.github.io/jq/):
+will append the health-check response to the 'STATUS' column. To extract just the health you can use `inspect`:
 ```bash
-$ sudo docker inspect gemstash | jq '.[].State.Health.Status'
+$ sudo docker inspect --format='{{json .State.Health.Status}}' gemstash
 "healthy"
 ```
 
