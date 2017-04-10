@@ -15,6 +15,7 @@
 #
 class govuk_ci::agent(
   $docker_enabled = true,
+  $gemstash_enabled = false,
   $master_ssh_key = undef,
   $elasticsearch_enabled = true,
 ) {
@@ -22,6 +23,10 @@ class govuk_ci::agent(
   include ::govuk_ci::agent::redis
   if $docker_enabled {
     include ::govuk_ci::agent::docker
+  }
+  if $gemstash_enabled {
+    include ::govuk_bundler::config
+    include ::govuk_containers::gemstash
   }
   if $elasticsearch_enabled {
     include ::govuk_ci::agent::elasticsearch
