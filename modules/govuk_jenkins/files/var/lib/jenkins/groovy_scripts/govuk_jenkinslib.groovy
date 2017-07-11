@@ -61,6 +61,9 @@
  *          stage, such as environment variable configuration
  *        - overrideTestTask A closure containing commands to run to test the
  *          project. This will run instead of the default `bundle exec rake`
+ *        - e2eTests Whether or not to run the Publishing end-to-end tests
+ *        - appName Used to name the commitish in the end-to-end tests
+ *        - e2eTestBranch The branch used to run end-to-end tests against
  *        - afterTest A closure containing commands to run after the test stage,
  *          such as report publishing
  *        - newStyleDockerTags. Tag docker images with timestamp and git SHA
@@ -185,6 +188,16 @@ def buildProject(Map options = [:]) {
             runTests()
           }
         }
+      }
+    }
+
+    if (options.e2eTests == true) {
+      setEnvar("FULL_COMMIT_HASH", sh(
+        script: "git rev-parse HEAD",
+        returnStdout: true
+      )
+      stage("End-to-end tests") {
+        runPublishingE2ETests()
       }
     }
 
@@ -744,6 +757,24 @@ def setBuildStatus(repoName, commit, message, state) {
       errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
       statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
   ]);
+}
+
+def runPublishingE2ETests() {
+  build(
+    job: "publishing-e2e-tests/${options.e2eTestBranch}",
+    parameters: [
+      [$class: "StringParameterValue",
+        name: "${options.appName}_COMMITISH",
+        value: env.FULL_COMMIT_HASH],
+      [$class: "StringParameterValue",
+        name: "ORIGIN_REPO",
+        value: repoName],
+      [$class: "StringParameterValue",
+        name: "ORIGIN_COMMIT",
+        value: env.FULL_COMMIT_HASH]
+    ],
+    wait: false,
+  )
 }
 
 return this;
